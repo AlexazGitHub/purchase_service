@@ -3,6 +3,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from apps.core.models import TimeStampedModel
 
@@ -90,3 +91,108 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     def __str__(self):
         """Строковое представление пользователя."""
         return self.email
+
+
+class Contact(TimeStampedModel):
+    """Контакт пользователя: телефон или адрес доставки.
+
+    У пользователя может быть не более одного телефона
+    и не более пяти адресов (проверяется в clean()).
+    """
+
+    class ContactType(models.TextChoices):
+        """Тип контакта."""
+
+        PHONE = "phone", "Телефон"
+        ADDRESS = "address", "Адрес"
+
+    MAX_ADDRESSES_PER_USER = 5
+
+    user = models.ForeignKey(
+        User,
+        verbose_name="Пользователь",
+        related_name="contacts",
+        on_delete=models.CASCADE,
+    )
+    type = models.CharField(
+        verbose_name="Тип контакта",
+        max_length=10,
+        choices=ContactType.choices,
+    )
+    phone = models.CharField(
+        verbose_name="Телефон",
+        max_length=20,
+        blank=True,
+    )
+    city = models.CharField(
+        verbose_name="Город",
+        max_length=50,
+        blank=True,
+    )
+    street = models.CharField(
+        verbose_name="Улица",
+        max_length=100,
+        blank=True,
+    )
+    house = models.CharField(
+        verbose_name="Дом",
+        max_length=15,
+        blank=True,
+    )
+    structure = models.CharField(
+        verbose_name="Корпус",
+        max_length=15,
+        blank=True,
+    )
+    building = models.CharField(
+        verbose_name="Строение",
+        max_length=15,
+        blank=True,
+    )
+    apartment = models.CharField(
+        verbose_name="Квартира",
+        max_length=15,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = "Контакт"
+        verbose_name_plural = "Контакты"
+
+    def __str__(self):
+        """Строковое представление контакта."""
+        if self.type == self.ContactType.PHONE:
+            return f"{self.user.email}: тел. {self.phone}"
+        return f"{self.user.email}: {self.city}, {self.street}"
+
+    def clean(self):
+        """Валидация бизнес-правил: 1 телефон, до 5 адресов."""
+        super().clean()
+
+        if self.type == self.ContactType.PHONE:
+            self._validate_single_phone()
+        elif self.type == self.ContactType.ADDRESS:
+            self._validate_max_addresses()
+
+    def _validate_single_phone(self):
+        """Проверить, что у пользователя ещё нет телефона."""
+        existing = Contact.objects.filter(
+            user=self.user,
+            type=self.ContactType.PHONE,
+        ).exclude(pk=self.pk)
+        if existing.exists():
+            raise ValidationError(
+                "У пользователя уже есть телефонный контакт"
+            )
+
+    def _validate_max_addresses(self):
+        """Проверить, что у пользователя не более 5 адресов."""
+        existing_count = Contact.objects.filter(
+            user=self.user,
+            type=self.ContactType.ADDRESS,
+        ).exclude(pk=self.pk).count()
+        if existing_count >= self.MAX_ADDRESSES_PER_USER:
+            raise ValidationError(
+                f"Нельзя добавить более "
+                f"{self.MAX_ADDRESSES_PER_USER} адресов"
+            )
