@@ -1,3 +1,8 @@
+"""Регистрация моделей users в админке."""
+
 from django.contrib import admin
 
-# Register your models here.
+from apps.users.models import Contact, User
+
+admin.site.register(User)
+admin.site.register(Contact)

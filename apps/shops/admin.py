@@ -1,3 +1,8 @@
+"""Регистрация моделей shops в админке."""
+
 from django.contrib import admin
 
-# Register your models here.
+from apps.shops.models import Category, Shop
+
+admin.site.register(Shop)
+admin.site.register(Category)
