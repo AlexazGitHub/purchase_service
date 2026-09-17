@@ -3,7 +3,7 @@
 from django.db import models
 
 from apps.core.models import TimeStampedModel
-from apps.shops.models import Category
+from apps.shops.models import Category, Shop
 
 
 class Product(TimeStampedModel):
@@ -80,3 +80,56 @@ class ProductParameter(TimeStampedModel):
     def __str__(self):
         """Строковое представление параметра товара."""
         return f"{self.product.name} — {self.parameter.name}: {self.value}"
+
+
+class ProductInfo(TimeStampedModel):
+    """Информация о товаре в конкретном магазине: цена, остаток."""
+
+    product = models.ForeignKey(
+        Product,
+        verbose_name="Товар",
+        related_name="product_infos",
+        on_delete=models.CASCADE,
+    )
+    shop = models.ForeignKey(
+        Shop,
+        verbose_name="Магазин",
+        related_name="product_infos",
+        on_delete=models.CASCADE,
+    )
+    external_id = models.PositiveIntegerField(
+        verbose_name="Внешний ID товара у поставщика",
+    )
+    model = models.CharField(
+        verbose_name="Артикул",
+        max_length=100,
+        blank=True,
+    )
+    quantity = models.PositiveIntegerField(
+        verbose_name="Количество на складе",
+        default=0,
+    )
+    price = models.DecimalField(
+        verbose_name="Цена",
+        max_digits=10,
+        decimal_places=2,
+    )
+    price_rrc = models.DecimalField(
+        verbose_name="Рекомендованная розничная цена",
+        max_digits=10,
+        decimal_places=2,
+    )
+
+    class Meta:
+        verbose_name = "Информация о товаре"
+        verbose_name_plural = "Информация о товарах"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "shop"],
+                name="unique_product_shop",
+            )
+        ]
+
+    def __str__(self):
+        """Строковое представление записи о товаре в магазине."""
+        return f"{self.product.name} в {self.shop.name}: {self.price}"
