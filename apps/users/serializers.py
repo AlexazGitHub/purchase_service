@@ -1,10 +1,11 @@
 """Сериализаторы для приложения users."""
 
 from rest_framework import serializers
-from apps.users.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth import authenticate
+
+from apps.users.models import Contact, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -75,4 +76,35 @@ class LoginSerializer(serializers.Serializer):
                 "Неверный email или пароль, либо email не подтверждён"
             )
         attrs["user"] = user
+        return attrs
+
+
+class ContactSerializer(serializers.ModelSerializer):
+    """Сериализатор контакта пользователя (телефон/адрес)."""
+
+    class Meta:
+        model = Contact
+        fields = (
+            "id",
+            "type",
+            "phone",
+            "city",
+            "street",
+            "house",
+            "structure",
+            "building",
+            "apartment",
+        )
+
+    def validate(self, attrs):
+        """Проверить бизнес-правила через Contact.clean()."""
+        instance = Contact(
+            user=self.context["request"].user,
+            **{**{f: getattr(self.instance, f, "") for f in attrs}, **attrs}
+            if self.instance
+            else attrs,
+        )
+        if self.instance:
+            instance.pk = self.instance.pk
+        instance.clean()
         return attrs

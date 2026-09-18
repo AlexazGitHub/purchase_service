@@ -2,6 +2,8 @@
 
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -9,6 +11,7 @@ from rest_framework.authtoken.models import Token
 from apps.users.models import EmailConfirmationToken, User
 from apps.users.serializers import RegisterSerializer
 from apps.users.serializers import LoginSerializer
+from apps.users.serializers import ContactSerializer
 
 
 class RegisterView(APIView):
@@ -77,4 +80,18 @@ class LoginView(APIView):
         user = serializer.validated_data["user"]
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key})
-        
+
+
+class ContactViewSet(ModelViewSet):
+    """CRUD для контактов пользователя (только свои контакты)."""
+
+    serializer_class = ContactSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """Вернуть только контакты текущего пользователя."""
+        return self.request.user.contacts.all()
+
+    def perform_create(self, serializer):
+        """Привязать создаваемый контакт к текущему пользователю."""
+        serializer.save(user=self.request.user)
