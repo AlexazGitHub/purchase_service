@@ -54,6 +54,11 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         max_length=100,
         blank=True,
     )
+    last_name = models.CharField(
+        verbose_name="Фамилия",
+        max_length=100,
+        blank=True,
+    )
     company = models.CharField(
         verbose_name="Компания",
         max_length=150,
