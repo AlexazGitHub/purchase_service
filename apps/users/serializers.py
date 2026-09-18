@@ -4,6 +4,7 @@ from rest_framework import serializers
 from apps.users.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.contrib.auth import authenticate
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -54,3 +55,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    """Сериализатор для входа пользователя (проверка credentials)."""
+
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        """Проверить email и пароль через стандартный authenticate()."""
+        user = authenticate(
+            request=self.context.get("request"),
+            username=attrs["email"],
+            password=attrs["password"],
+        )
+        if not user:
+            raise serializers.ValidationError(
+                "Неверный email или пароль, либо email не подтверждён"
+            )
+        attrs["user"] = user
+        return attrs

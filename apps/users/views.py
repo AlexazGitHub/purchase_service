@@ -4,9 +4,11 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
 
 from apps.users.models import EmailConfirmationToken, User
 from apps.users.serializers import RegisterSerializer
+from apps.users.serializers import LoginSerializer
 
 
 class RegisterView(APIView):
@@ -58,4 +60,21 @@ class ConfirmRegistrationView(APIView):
         token.delete()
 
         return Response({"message": "Email подтверждён"})
-    
+
+
+class LoginView(APIView):
+    """Вход пользователя, получение токена авторизации."""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """Проверить credentials, вернуть токен."""
+        serializer = LoginSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key})
+        
