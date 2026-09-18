@@ -1,5 +1,6 @@
 """Management-команда для импорта товаров из YAML-файла."""
 
+import yaml
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.products.services.import_products import (
@@ -29,6 +30,10 @@ class Command(BaseCommand):
             data = parse_yaml_file(file_path)
         except FileNotFoundError as exc:
             raise CommandError(f"Файл не найден: {file_path}") from exc
+        except yaml.YAMLError as exc:
+            raise CommandError(
+                f"Некорректный синтаксис YAML в файле {file_path}: {exc}"
+            ) from exc
         except KeyError as exc:
             raise CommandError(
                 f"В файле отсутствует обязательное поле: {exc}"
