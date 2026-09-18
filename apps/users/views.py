@@ -1,3 +1,61 @@
-from django.shortcuts import render
+"""API views приложения users."""
 
-# Create your views here.
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.users.models import EmailConfirmationToken, User
+from apps.users.serializers import RegisterSerializer
+
+
+class RegisterView(APIView):
+    """Регистрация нового пользователя."""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """Создать неактивного пользователя, отправить письмо."""
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"message": "Регистрация успешна, подтвердите email"},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ConfirmRegistrationView(APIView):
+    """Подтверждение email по токену."""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """Активировать пользователя по токену подтверждения."""
+        email = request.data.get("email")
+        token_key = request.data.get("token")
+
+        if not email or not token_key:
+            return Response(
+                {"error": "Необходимо указать email и token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            token = EmailConfirmationToken.objects.get(
+                user__email=email,
+                key=token_key,
+            )
+        except EmailConfirmationToken.DoesNotExist:
+            return Response(
+                {"error": "Неверный email или токен"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = token.user
+        user.is_active = True
+        user.save()
+        token.delete()
+
+        return Response({"message": "Email подтверждён"})
+    

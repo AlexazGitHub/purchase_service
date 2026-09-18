@@ -4,6 +4,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.core.exceptions import ValidationError
+import secrets
 
 from apps.core.models import TimeStampedModel
 
@@ -201,3 +202,37 @@ class Contact(TimeStampedModel):
                 f"Нельзя добавить более "
                 f"{self.MAX_ADDRESSES_PER_USER} адресов"
             )
+
+
+class EmailConfirmationToken(models.Model):
+    """Токен для подтверждения email при регистрации."""
+
+    user = models.OneToOneField(
+        User,
+        verbose_name="Пользователь",
+        related_name="email_confirmation_token",
+        on_delete=models.CASCADE,
+    )
+    key = models.CharField(
+        verbose_name="Токен",
+        max_length=64,
+        unique=True,
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Дата создания",
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = "Токен подтверждения email"
+        verbose_name_plural = "Токены подтверждения email"
+
+    def save(self, *args, **kwargs):
+        """Сгенерировать ключ токена при первом сохранении."""
+        if not self.key:
+            self.key = secrets.token_hex(32)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        """Строковое представление токена."""
+        return f"Токен подтверждения для {self.user.email}"

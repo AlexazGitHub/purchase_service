@@ -2,8 +2,11 @@
 
 from django.urls import path
 
+from apps.users.views import ConfirmRegistrationView, RegisterView
+
 app_name = "users"
 
 urlpatterns = [
-    # Наполним на задачах 3.2–3.5
+    path("register", RegisterView.as_view(), name="register"),
+    path("register/confirm", ConfirmRegistrationView.as_view(), name="register-confirm"),
 ]
