@@ -32,17 +32,15 @@ class ImportData:
     goods: list[GoodData] = field(default_factory=list)
 
 
-def parse_yaml_file(file_path: str | Path) -> ImportData:
-    """Прочитать и распарсить YAML-файл импорта товаров.
+def parse_yaml_content(content: str) -> ImportData:
+    """Распарсить YAML-содержимое (текст) в структуру импорта.
 
-    :param file_path: путь к YAML-файлу.
+    :param content: содержимое YAML-файла в виде строки.
     :return: структурированные данные импорта.
-    :raises FileNotFoundError: если файл не найден.
-    :raises yaml.YAMLError: если файл содержит некорректный YAML.
-    :raises KeyError: если в файле отсутствуют обязательные поля.
+    :raises yaml.YAMLError: если содержимое содержит некорректный YAML.
+    :raises KeyError: если отсутствуют обязательные поля.
     """
-    with open(file_path, encoding="utf-8") as file:
-        raw_data = yaml.safe_load(file)
+    raw_data = yaml.safe_load(content)
 
     categories = {
         category["id"]: category["name"]
@@ -71,6 +69,20 @@ def parse_yaml_file(file_path: str | Path) -> ImportData:
         categories=categories,
         goods=goods,
     )
+
+
+def parse_yaml_file(file_path: str | Path) -> ImportData:
+    """Прочитать и распарсить YAML-файл импорта товаров.
+
+    :param file_path: путь к YAML-файлу.
+    :return: структурированные данные импорта.
+    :raises FileNotFoundError: если файл не найден.
+    :raises yaml.YAMLError: если файл содержит некорректный YAML.
+    :raises KeyError: если в файле отсутствуют обязательные поля.
+    """
+    with open(file_path, encoding="utf-8") as file:
+        content = file.read()
+    return parse_yaml_content(content)
 
 
 @transaction.atomic
