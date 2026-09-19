@@ -32,3 +32,11 @@ class OrderForPartnerSerializer(serializers.ModelSerializer):
         shop = self.context["shop"]
         items = order.items.filter(shop=shop)
         return OrderItemForPartnerSerializer(items, many=True).data
+
+
+class AddToCartSerializer(serializers.Serializer):
+    """Сериализатор для добавления товара в корзину."""
+
+    product_id = serializers.IntegerField()
+    shop_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(default=1, min_value=1)
