@@ -84,3 +84,9 @@ class CartSerializer(serializers.ModelSerializer):
     def get_total_sum(self, order):
         """Посчитать общую сумму корзины по всем позициям."""
         return sum(item.price * item.quantity for item in order.items.all())
+
+
+class ConfirmOrderSerializer(serializers.Serializer):
+    """Сериализатор подтверждения заказа."""
+
+    contact_id = serializers.IntegerField()

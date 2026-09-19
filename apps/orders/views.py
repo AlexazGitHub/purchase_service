@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.orders.models import Order, OrderItem
-from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer
+from apps.orders.models import Order, OrderItem, Contact
+from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer, ConfirmOrderSerializer
 from apps.shops.models import Shop
 from apps.users.permissions import IsShopUser
 from apps.orders.serializers import AddToCartSerializer
@@ -113,3 +113,50 @@ class CartView(APIView):
             {"message": "Товар добавлен в корзину"},
             status=status.HTTP_201_CREATED,
         )
+
+
+class ConfirmOrderView(APIView):
+    """Подтверждение заказа: выбор контакта, смена статуса."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        """Подтвердить текущую корзину как заказ."""
+        serializer = ConfirmOrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        contact_id = serializer.validated_data["contact_id"]
+
+        try:
+            order = Order.objects.get(
+                user=request.user,
+                status=Order.Status.BASKET,
+            )
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Корзина пуста"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not order.items.exists():
+            return Response(
+                {"error": "Корзина пуста"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            contact = Contact.objects.get(
+                id=contact_id,
+                user=request.user,
+                type=Contact.ContactType.ADDRESS,
+            )
+        except Contact.DoesNotExist:
+            return Response(
+                {"error": "Контакт не найден или не принадлежит вам"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order.contact = contact
+        order.status = Order.Status.NEW
+        order.save()
+
+        return Response({"message": f"Заказ №{order.id} оформлен"})
