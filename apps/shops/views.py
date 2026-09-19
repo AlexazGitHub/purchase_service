@@ -3,16 +3,18 @@
 import requests
 import yaml
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 
 from apps.products.services.import_products import (
     parse_yaml_content,
     save_import_data,
 )
 from apps.users.permissions import IsShopUser
-from apps.shops.models import Shop
+from apps.shops.models import Shop, Category
+from apps.shops.serializers import CategorySerializer, ShopSerializer
 
 
 class PartnerUpdateView(APIView):
@@ -91,3 +93,19 @@ class PartnerStateView(APIView):
     def _get_shop(self, user):
         """Получить магазин, привязанный к пользователю."""
         return Shop.objects.get(user=user)
+
+
+class ShopListView(ListAPIView):
+    """Список магазинов, принимающих заказы."""
+
+    queryset = Shop.objects.filter(state=True)
+    serializer_class = ShopSerializer
+    permission_classes = (AllowAny,)
+
+
+class CategoryListView(ListAPIView):
+    """Список категорий товаров."""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (AllowAny,)

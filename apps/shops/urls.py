@@ -2,11 +2,18 @@
 
 from django.urls import path
 
-from apps.shops.views import PartnerStateView, PartnerUpdateView
+from apps.shops.views import (
+    CategoryListView,
+    PartnerStateView,
+    PartnerUpdateView,
+    ShopListView,
+)
 
 app_name = "shops"
 
 urlpatterns = [
     path("partner/update", PartnerUpdateView.as_view(), name="partner-update"),
     path("partner/state", PartnerStateView.as_view(), name="partner-state"),
+    path("", ShopListView.as_view(), name="shop-list"),
+    path("categories", CategoryListView.as_view(), name="category-list"),
 ]
