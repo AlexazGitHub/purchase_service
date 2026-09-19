@@ -2,8 +2,10 @@
 
 from django.urls import path
 
+from apps.orders.views import PartnerOrdersView
+
 app_name = "orders"
 
 urlpatterns = [
-    # Наполним на этапе 5 (корзина и заказы)
+    path("partner/orders", PartnerOrdersView.as_view(), name="partner-orders"),
 ]
