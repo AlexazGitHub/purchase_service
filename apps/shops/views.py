@@ -12,6 +12,7 @@ from apps.products.services.import_products import (
     save_import_data,
 )
 from apps.users.permissions import IsShopUser
+from apps.shops.models import Shop
 
 
 class PartnerUpdateView(APIView):
@@ -51,6 +52,9 @@ class PartnerUpdateView(APIView):
             )
 
         shop = save_import_data(data)
+        if shop.user_id is None:
+            shop.user = request.user
+            shop.save()
 
         return Response(
             {
@@ -58,3 +62,32 @@ class PartnerUpdateView(APIView):
                 f"товаров обработано: {len(data.goods)}"
             }
         )
+
+class PartnerStateView(APIView):
+    """Получение и изменение статуса приёма заказов магазином."""
+
+    permission_classes = (IsAuthenticated, IsShopUser)
+
+    def get(self, request):
+        """Вернуть текущий статус приёма заказов."""
+        shop = self._get_shop(request.user)
+        return Response({"state": shop.state})
+
+    def post(self, request):
+        """Изменить статус приёма заказов."""
+        shop = self._get_shop(request.user)
+        state = request.data.get("state")
+
+        if not isinstance(state, bool):
+            return Response(
+                {"error": "Поле state должно быть true или false"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        shop.state = state
+        shop.save()
+        return Response({"state": shop.state})
+
+    def _get_shop(self, user):
+        """Получить магазин, привязанный к пользователю."""
+        return Shop.objects.get(user=user)
