@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.orders.models import Order, OrderItem
-from apps.orders.serializers import OrderForPartnerSerializer
+from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer
 from apps.shops.models import Shop
 from apps.users.permissions import IsShopUser
 from apps.orders.serializers import AddToCartSerializer
@@ -36,10 +36,41 @@ class PartnerOrdersView(ListAPIView):
         return context
 
 
-class CartAddView(APIView):
-    """Добавление товара в корзину текущего пользователя."""
+class CartItemDeleteView(APIView):
+    """Удаление позиции из корзины."""
 
     permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, item_id):
+        """Удалить позицию корзины (только свою)."""
+        try:
+            item = OrderItem.objects.get(
+                id=item_id,
+                order__user=request.user,
+                order__status=Order.Status.BASKET,
+            )
+        except OrderItem.DoesNotExist:
+            return Response(
+                {"error": "Позиция не найдена"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CartView(APIView):
+    """Просмотр и добавление товаров в корзину текущего пользователя."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Вернуть текущую корзину пользователя (создать пустую, если нет)."""
+        order, _ = Order.objects.get_or_create(
+            user=request.user,
+            status=Order.Status.BASKET,
+        )
+        serializer = CartSerializer(order)
+        return Response(serializer.data)
 
     def post(self, request):
         """Добавить позицию в корзину или увеличить её количество."""
@@ -82,25 +113,3 @@ class CartAddView(APIView):
             {"message": "Товар добавлен в корзину"},
             status=status.HTTP_201_CREATED,
         )
-
-
-class CartItemDeleteView(APIView):
-    """Удаление позиции из корзины."""
-
-    permission_classes = (IsAuthenticated,)
-
-    def delete(self, request, item_id):
-        """Удалить позицию корзины (только свою)."""
-        try:
-            item = OrderItem.objects.get(
-                id=item_id,
-                order__user=request.user,
-                order__status=Order.Status.BASKET,
-            )
-        except OrderItem.DoesNotExist:
-            return Response(
-                {"error": "Позиция не найдена"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        item.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -40,3 +40,47 @@ class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     shop_id = serializers.IntegerField()
     quantity = serializers.IntegerField(default=1, min_value=1)
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    """Позиция корзины."""
+
+    product_name = serializers.CharField(
+        source="product.name",
+        read_only=True,
+    )
+    shop_name = serializers.CharField(
+        source="shop.name",
+        read_only=True,
+    )
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderItem
+        fields = (
+            "id",
+            "product_name",
+            "shop_name",
+            "quantity",
+            "price",
+            "total",
+        )
+
+    def get_total(self, item):
+        """Посчитать сумму по позиции (цена x количество)."""
+        return item.price * item.quantity
+
+
+class CartSerializer(serializers.ModelSerializer):
+    """Корзина пользователя со списком позиций и итоговой суммой."""
+
+    items = CartItemSerializer(many=True, read_only=True)
+    total_sum = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ("id", "status", "items", "total_sum")
+
+    def get_total_sum(self, order):
+        """Посчитать общую сумму корзины по всем позициям."""
+        return sum(item.price * item.quantity for item in order.items.all())
