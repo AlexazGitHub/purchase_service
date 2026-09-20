@@ -1,5 +1,8 @@
 """API views приложения orders."""
 
+from django.conf import settings
+from django.core.mail import send_mail
+
 from rest_framework.generics import ListAPIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -159,4 +162,32 @@ class ConfirmOrderView(APIView):
         order.status = Order.Status.NEW
         order.save()
 
+        self._send_notifications(order)
+
         return Response({"message": f"Заказ №{order.id} оформлен"})
+
+    def _send_notifications(self, order):
+        """Отправить письма о подтверждении заказа покупателю и админу."""
+        items_text = "\n".join(
+            f"- {item.product.name} ({item.shop.name}) x{item.quantity}"
+            for item in order.items.all()
+        )
+        message = (
+            f"Заказ №{order.id} оформлен.\n\n"
+            f"Состав заказа:\n{items_text}"
+        )
+
+        send_mail(
+            subject=f"Ваш заказ №{order.id} оформлен",
+            message=message,
+            from_email=None,
+            recipient_list=[order.user.email],
+        )
+
+        if settings.ADMIN_EMAIL:
+            send_mail(
+                subject=f"Новый заказ №{order.id}",
+                message=message,
+                from_email=None,
+                recipient_list=[settings.ADMIN_EMAIL],
+            )

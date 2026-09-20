@@ -159,3 +159,4 @@ REST_FRAMEWORK = {
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "noreply@purchase-service.local"
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
