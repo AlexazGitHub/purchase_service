@@ -3,14 +3,14 @@
 from django.conf import settings
 from django.core.mail import send_mail
 
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.orders.models import Order, OrderItem, Contact
-from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer, ConfirmOrderSerializer
+from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer, ConfirmOrderSerializer, OrderSerializer
 from apps.shops.models import Shop
 from apps.users.permissions import IsShopUser
 from apps.orders.serializers import AddToCartSerializer
@@ -191,3 +191,29 @@ class ConfirmOrderView(APIView):
                 from_email=None,
                 recipient_list=[settings.ADMIN_EMAIL],
             )
+
+
+class OrderListView(ListAPIView):
+    """Список оформленных заказов текущего пользователя."""
+
+    serializer_class = OrderSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """Вернуть только оформленные заказы текущего пользователя."""
+        return Order.objects.filter(
+            user=self.request.user,
+        ).exclude(status=Order.Status.BASKET)
+
+
+class OrderDetailView(RetrieveAPIView):
+    """Детали конкретного заказа текущего пользователя."""
+
+    serializer_class = OrderSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """Вернуть только заказы текущего пользователя (не чужие)."""
+        return Order.objects.filter(
+            user=self.request.user,
+        ).exclude(status=Order.Status.BASKET)

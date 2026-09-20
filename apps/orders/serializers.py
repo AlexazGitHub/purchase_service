@@ -90,3 +90,26 @@ class ConfirmOrderSerializer(serializers.Serializer):
     """Сериализатор подтверждения заказа."""
 
     contact_id = serializers.IntegerField()
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    """Оформленный заказ пользователя со списком позиций."""
+
+    items = CartItemSerializer(many=True, read_only=True)
+    total_sum = serializers.SerializerMethodField()
+    contact_id = serializers.IntegerField(source="contact.id", read_only=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "status",
+            "created_at",
+            "contact_id",
+            "items",
+            "total_sum",
+        )
+
+    def get_total_sum(self, order):
+        """Посчитать общую сумму заказа по всем позициям."""
+        return sum(item.price * item.quantity for item in order.items.all())
