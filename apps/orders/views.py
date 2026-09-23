@@ -94,6 +94,24 @@ class CartView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        existing_item = OrderItem.objects.filter(
+            order__user=request.user,
+            order__status=Order.Status.BASKET,
+            product_id=product_id,
+            shop_id=shop_id,
+        ).first()
+        already_in_cart = existing_item.quantity if existing_item else 0
+
+        if already_in_cart + quantity > product_info.quantity:
+            return Response(
+                {
+                    "error": f"Недостаточно товара на складе. "
+                    f"Доступно: {product_info.quantity}, "
+                    f"в корзине уже: {already_in_cart}"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         order, _ = Order.objects.get_or_create(
             user=request.user,
             status=Order.Status.BASKET,
