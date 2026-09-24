@@ -2,12 +2,7 @@
 
 import pytest
 
-from apps.products.models import (
-    Parameter,
-    Product,
-    ProductInfo,
-    ProductParameter,
-)
+from apps.products.models import Product, ProductInfo
 from apps.products.services.import_products import (
     parse_yaml_file,
     save_import_data,

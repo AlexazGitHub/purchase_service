@@ -2,19 +2,24 @@
 
 from django.conf import settings
 from django.core.mail import send_mail
-
-from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.orders.models import Order, OrderItem, Contact
-from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer, ConfirmOrderSerializer, OrderSerializer, OrderStatusUpdateSerializer
+from apps.orders.models import Contact, Order, OrderItem
+from apps.orders.serializers import (
+    AddToCartSerializer,
+    CartSerializer,
+    ConfirmOrderSerializer,
+    OrderForPartnerSerializer,
+    OrderSerializer,
+    OrderStatusUpdateSerializer,
+)
+from apps.products.models import ProductInfo
 from apps.shops.models import Shop
 from apps.users.permissions import IsShopUser
-from apps.orders.serializers import AddToCartSerializer
-from apps.products.models import ProductInfo
 
 
 class PartnerOrdersView(ListAPIView):
@@ -191,8 +196,7 @@ class ConfirmOrderView(APIView):
             for item in order.items.all()
         )
         message = (
-            f"Заказ №{order.id} оформлен.\n\n"
-            f"Состав заказа:\n{items_text}"
+            f"Заказ №{order.id} оформлен.\n\n" f"Состав заказа:\n{items_text}"
         )
 
         send_mail(

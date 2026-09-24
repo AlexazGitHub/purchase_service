@@ -1,9 +1,9 @@
 """Сериализаторы для приложения users."""
 
-from rest_framework import serializers
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.contrib.auth import authenticate
+from rest_framework import serializers
 
 from apps.users.models import Contact, User
 
@@ -100,9 +100,11 @@ class ContactSerializer(serializers.ModelSerializer):
         """Проверить бизнес-правила через Contact.clean()."""
         instance = Contact(
             user=self.context["request"].user,
-            **{**{f: getattr(self.instance, f, "") for f in attrs}, **attrs}
-            if self.instance
-            else attrs,
+            **(
+                {**{f: getattr(self.instance, f, "") for f in attrs}, **attrs}
+                if self.instance
+                else attrs
+            ),
         )
         if self.instance:
             instance.pk = self.instance.pk

@@ -1,3 +1,4 @@
-from django.test import TestCase
+"""Тесты core (пока не требуется).
 
-# Create your tests here.
+См. apps/products/tests, apps/users/tests, apps/orders/tests.
+"""

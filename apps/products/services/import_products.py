@@ -2,10 +2,16 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
+
 import yaml
 from django.db import transaction
 
-from apps.products.models import Parameter, Product, ProductInfo, ProductParameter
+from apps.products.models import (
+    Parameter,
+    Product,
+    ProductInfo,
+    ProductParameter,
+)
 from apps.shops.models import Category, Shop
 
 
@@ -43,8 +49,7 @@ def parse_yaml_content(content: str) -> ImportData:
     raw_data = yaml.safe_load(content)
 
     categories = {
-        category["id"]: category["name"]
-        for category in raw_data["categories"]
+        category["id"]: category["name"] for category in raw_data["categories"]
     }
 
     goods = [

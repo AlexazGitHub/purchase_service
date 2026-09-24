@@ -1,3 +1,1 @@
-from django.test import TestCase
-
-# Create your tests here.
+"""Устаревший файл-заглушка, тесты shops не создавались отдельно."""

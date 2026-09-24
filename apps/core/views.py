@@ -1,3 +1,4 @@
-from django.shortcuts import render
+"""Views core (пока не требуется).
 
-# Create your views here.
+TimeStampedModel используется только как абстрактная база.
+"""

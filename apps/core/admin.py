@@ -1,3 +1,1 @@
-from django.contrib import admin
-
-# Register your models here.
+"""Регистрация моделей core в админке (пока не требуется)."""

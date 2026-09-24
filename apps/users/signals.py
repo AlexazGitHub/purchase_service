@@ -1,9 +1,9 @@
 """Сигналы приложения users."""
 
 from django.core.mail import send_mail
-from django_rest_passwordreset.signals import reset_password_token_created
-from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django_rest_passwordreset.signals import reset_password_token_created
 
 from apps.users.models import EmailConfirmationToken, User
 
@@ -34,7 +34,9 @@ def send_email_confirmation(sender, instance, created, **kwargs):
 
 
 @receiver(reset_password_token_created)
-def send_password_reset_email(sender, instance, reset_password_token, **kwargs):
+def send_password_reset_email(
+    sender, instance, reset_password_token, **kwargs
+):
     """Отправить письмо с токеном сброса пароля."""
     send_mail(
         subject="Восстановление пароля",

@@ -42,6 +42,7 @@ pytest
 - `GET/POST /api/v1/orders/cart`, `DELETE /cart/{id}` — корзина
 - `POST /api/v1/orders/confirm` — подтверждение заказа
 - `GET /api/v1/orders/`, `/{id}` — список и детали заказов пользователя
+- `PATCH /api/v1/orders/{id}/status` — смена статуса заказа (только для is_staff)
 
 ## Импорт товаров из shell (без API)
 ```bash

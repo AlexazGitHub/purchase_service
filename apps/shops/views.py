@@ -3,18 +3,18 @@
 import requests
 import yaml
 from rest_framework import status
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
 
 from apps.products.services.import_products import (
     parse_yaml_content,
     save_import_data,
 )
-from apps.users.permissions import IsShopUser
-from apps.shops.models import Shop, Category
+from apps.shops.models import Category, Shop
 from apps.shops.serializers import CategorySerializer, ShopSerializer
+from apps.users.permissions import IsShopUser
 
 
 class PartnerUpdateView(APIView):
@@ -64,6 +64,7 @@ class PartnerUpdateView(APIView):
                 f"товаров обработано: {len(data.goods)}"
             }
         )
+
 
 class PartnerStateView(APIView):
     """Получение и изменение статуса приёма заказов магазином."""

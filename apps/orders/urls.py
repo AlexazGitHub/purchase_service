@@ -17,7 +17,11 @@ app_name = "orders"
 urlpatterns = [
     path("partner/orders", PartnerOrdersView.as_view(), name="partner-orders"),
     path("cart", CartView.as_view(), name="cart"),
-    path("cart/<int:item_id>", CartItemDeleteView.as_view(), name="cart-item-delete"),
+    path(
+        "cart/<int:item_id>",
+        CartItemDeleteView.as_view(),
+        name="cart-item-delete",
+    ),
     path("confirm", ConfirmOrderView.as_view(), name="confirm-order"),
     path(
         "<int:pk>/status",

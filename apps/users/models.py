@@ -1,10 +1,11 @@
 """Модели пользователей сервиса покупок."""
 
+import secrets
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.db import models
 from django.core.exceptions import ValidationError
-import secrets
+from django.db import models
 
 from apps.core.models import TimeStampedModel
 
@@ -187,16 +188,18 @@ class Contact(TimeStampedModel):
             type=self.ContactType.PHONE,
         ).exclude(pk=self.pk)
         if existing.exists():
-            raise ValidationError(
-                "У пользователя уже есть телефонный контакт"
-            )
+            raise ValidationError("У пользователя уже есть телефонный контакт")
 
     def _validate_max_addresses(self):
         """Проверить, что у пользователя не более 5 адресов."""
-        existing_count = Contact.objects.filter(
-            user=self.user,
-            type=self.ContactType.ADDRESS,
-        ).exclude(pk=self.pk).count()
+        existing_count = (
+            Contact.objects.filter(
+                user=self.user,
+                type=self.ContactType.ADDRESS,
+            )
+            .exclude(pk=self.pk)
+            .count()
+        )
         if existing_count >= self.MAX_ADDRESSES_PER_USER:
             raise ValidationError(
                 f"Нельзя добавить более "

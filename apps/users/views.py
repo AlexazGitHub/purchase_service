@@ -1,17 +1,18 @@
 """API views приложения users."""
 
 from rest_framework import status
-from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
+from rest_framework.viewsets import ModelViewSet
 
-from apps.users.models import EmailConfirmationToken, User
-from apps.users.serializers import RegisterSerializer
-from apps.users.serializers import LoginSerializer
-from apps.users.serializers import ContactSerializer
+from apps.users.models import EmailConfirmationToken
+from apps.users.serializers import (
+    ContactSerializer,
+    LoginSerializer,
+    RegisterSerializer,
+)
 
 
 class RegisterView(APIView):
