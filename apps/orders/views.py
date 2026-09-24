@@ -5,12 +5,12 @@ from django.core.mail import send_mail
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.orders.models import Order, OrderItem, Contact
-from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer, ConfirmOrderSerializer, OrderSerializer
+from apps.orders.serializers import OrderForPartnerSerializer, CartSerializer, ConfirmOrderSerializer, OrderSerializer, OrderStatusUpdateSerializer
 from apps.shops.models import Shop
 from apps.users.permissions import IsShopUser
 from apps.orders.serializers import AddToCartSerializer
@@ -235,3 +235,26 @@ class OrderDetailView(RetrieveAPIView):
         return Order.objects.filter(
             user=self.request.user,
         ).exclude(status=Order.Status.BASKET)
+
+
+class OrderStatusUpdateView(APIView):
+    """Смена статуса заказа администратором."""
+
+    permission_classes = (IsAdminUser,)
+
+    def patch(self, request, pk):
+        """Изменить статус указанного заказа."""
+        try:
+            order = Order.objects.get(pk=pk)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Заказ не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = OrderStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order.status = serializer.validated_data["status"]
+        order.save()
+
+        return Response({"message": f"Статус заказа №{order.id} изменён"})

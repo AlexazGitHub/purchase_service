@@ -113,3 +113,9 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_total_sum(self, order):
         """Посчитать общую сумму заказа по всем позициям."""
         return sum(item.price * item.quantity for item in order.items.all())
+
+
+class OrderStatusUpdateSerializer(serializers.Serializer):
+    """Сериализатор смены статуса заказа."""
+
+    status = serializers.ChoiceField(choices=Order.Status.choices)
